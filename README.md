@@ -40,6 +40,9 @@ touch data/database.sqlite
 ```
 
 2. Run the Database Setup Script: Execute the database setup script to create the required tables:
+```bash
+php database-setup.php
+```
 
 ### 4. Run the Application
 Start the Slim application using the PHP server:

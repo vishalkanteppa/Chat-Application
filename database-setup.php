@@ -1,6 +1,6 @@
 <?php
 
-$db = new PDO('sqlite:./data/test_db.sqlite');
+$db = new PDO('sqlite:./data/database.sqlite');
 
 // create users table
 $db->exec("CREATE TABLE IF NOT EXISTS users (

@@ -27,6 +27,7 @@
             border: 1px solid #ddd;
             margin-bottom: 10px;
         }
+
     </style>
 </head>
 
@@ -57,7 +58,7 @@
     <p id="message-result"></p>
 
     <h2>List Messages</h2>
-    <input type="text" id="list_groupname" placeholder="Enter Group ID to list messages" required>
+    <input type="text" id="list_groupname" placeholder="Enter Group name to list messages" required>
     <button onclick="listMessages()">List Messages</button>
     <div id="messages"></div>
 
@@ -72,7 +73,7 @@
                 var username = document.getElementById("username").value;
 
                 // ensure username is not empty
-                if (username === "") {
+                if (username.trim() === "") {
                     alert('Please enter a username');
                     document.getElementById("user-result").textContent = 'Enter username';
                     return;
@@ -86,8 +87,8 @@
                     body: new URLSearchParams({ username: username })
                 })
                     .then(response => {
-                        if (response.status == 409){
-                            return {'status': 'User "' + username + '" already exists'};
+                        if (response.status == 409) {
+                            return { 'status': 'User "' + username + '" already exists' };
                         }
                         else if (!response.ok) {
                             // if server side throws unexpected errors
@@ -96,7 +97,7 @@
                             });
                         }
                         // if response is ok
-                        return {'status': 'User ' + username + ' created'};
+                        return { 'status': 'User ' + username + ' created' };
                     })
                     .then(data => {
                         document.getElementById("user-result").textContent = data.status;
@@ -113,7 +114,7 @@
                 var groupName = document.getElementById("groupname").value;
 
                 // ensure group name is not empty
-                if (groupName === "") {
+                if (groupName.trim() === "") {
                     alert('Please enter a group name');
                     document.getElementById("group-result").textContent = 'Enter group name';
                     return;
@@ -127,8 +128,8 @@
                     body: new URLSearchParams({ name: groupName })
                 })
                     .then(response => {
-                        if (response.status == 409){
-                            return {'status': 'Group "' + groupName + '" already exists'};;
+                        if (response.status == 409) {
+                            return { 'status': 'Group "' + groupName + '" already exists' };;
                         }
                         else if (!response.ok) {
                             // if server throws unexpected error
@@ -136,7 +137,7 @@
                                 throw new Error(data.error || 'Something went wrong');
                             });
                         }
-                        return {'status': 'Group "' + groupName + '" created'};
+                        return { 'status': 'Group "' + groupName + '" created' };
                     })
                     .then(data => {
                         // update frontend to show group is created
@@ -149,19 +150,19 @@
             }
 
 
-             // join group function
-             window.joinGroup = function () {
+            // join group function
+            window.joinGroup = function () {
                 var groupName = document.getElementById("join_groupname").value;
                 var userName = document.getElementById("join_username").value;
 
                 // ensure input fields are not empty
-                if (userName === "") {
+                if (userName.trim() === "") {
                     alert('Please enter a username');
                     document.getElementById("join-group-result").textContent = 'Username cannot be empty';
                     return;
                 }
 
-                if (groupName === "") {
+                if (groupName.trim() === "") {
                     alert('Please enter a group name');
                     document.getElementById("join-group-result").textContent = 'Group name cannot be empty';
                     return;
@@ -175,11 +176,11 @@
                     body: new URLSearchParams({ username: userName, groupname: groupName })
                 })
                     .then(response => {
-                        if (response.status == 404){
-                            return {'status': 'Username or group name not found.'};;
+                        if (response.status == 404) {
+                            return { 'status': 'Username or group name not found.' };;
                         }
-                        else if (response.status == 409){
-                            return {'status': 'User is already in group'};;
+                        else if (response.status == 409) {
+                            return { 'status': 'User is already in group' };;
                         }
                         else if (!response.ok) {
                             return response.json().then(data => {
@@ -208,17 +209,17 @@
                 var content = document.getElementById("message_content").value;
 
                 // ensure there are no empty fields
-                if (username === "") {
+                if (username.trim() === "") {
                     alert('Please enter a username');
                     document.getElementById("message-result").textContent = 'Username cannot be empty';
                     return;
                 }
-                if (group === "") {
+                if (group.trim() === "") {
                     alert('Please enter a group name');
                     document.getElementById("message-result").textContent = 'Group name cannot be empty';
                     return;
                 }
-                if (content === "") {
+                if (content.trim() === "") {
                     alert('Please enter a message to send');
                     document.getElementById("message-result").textContent = 'Message cannot be empty';
                     return;
@@ -232,8 +233,8 @@
                     body: new URLSearchParams({ group_name: group, user_name: username, content: content })
                 })
                     .then(response => {
-                        if (response.status == 404){
-                            return {'status': 'Username or group name not found.'};;
+                        if (response.status == 404) {
+                            return { 'status': 'Username or group name not found.' };;
                         }
                         else if (!response.ok) {
                             return response.json().then(data => {
@@ -242,7 +243,7 @@
                             });
                         }
 
-                        return { 'status' : 'Message sent!' }
+                        return { 'status': 'Message sent!' }
                     })
                     .then(data => {
                         // confirm to user that message is sent
@@ -258,12 +259,19 @@
             window.listMessages = function () {
                 var group_name = document.getElementById("list_groupname").value;
 
+                if (group_name.trim() === "") {
+                    alert('Please enter a group name');
+                    const messageContainer = document.getElementById("messages");
+                    messageContainer.textContent = "Group name cannot be empty";
+                    throw new Error('Group name field empty');
+                }
+
                 fetch(`${apiBaseUrl}/groups/${group_name}/messages`)
                     .then(response => {
-                        if (response.status == 404){
+                        if (response.status == 404) {
                             // if group does not exist
                             const messageContainer = document.getElementById("messages");
-                            messageContainer.innerHTML = "Group does not exist"; 
+                            messageContainer.innerHTML = "Group does not exist";
                             throw new Error('Group name not found.');
                         }
                         else if (!response.ok) {
@@ -279,17 +287,23 @@
                         data = data['messages'];
                         const messageContainer = document.getElementById("messages");
                         messageContainer.innerHTML = ""; // clear previous messages
+                        if (data.length == 0) {
+                            // if there are no messages sent yet in the group
+                            const messageContainer = document.getElementById("messages");
+                            messageContainer.innerHTML = "No messages in group";
+                            return;
+                        }
                         data.forEach(message => {
                             const messageDiv = document.createElement("div");
                             messageDiv.classList.add("message");
 
                             const date = new Date(message.timestamp.replace(' ', 'T')); // convert to human friendly date format
 
-                            const options = { 
-                                weekday: 'long', 
-                                month: 'long', 
-                                day: 'numeric', 
-                                hour: '2-digit', 
+                            const options = {
+                                weekday: 'long',
+                                month: 'long',
+                                day: 'numeric',
+                                hour: '2-digit',
                                 minute: '2-digit',
                                 second: '2-digit'
                             };
