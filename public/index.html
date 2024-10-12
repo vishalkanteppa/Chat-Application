@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        input,
+        button {
+            margin: 5px 0;
+            padding: 10px;
+            width: 100%;
+        }
+
+        #messages {
+            margin-top: 20px;
+        }
+
+        .message {
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Chat Application</h1>
+
+    <h2>Create User</h2>
+    <input type="text" id="username" placeholder="Enter your username" required>
+    <button onclick="createUser()">Create User</button>
+    <p id="user-result"></p>
+
+    <h2>Create Group</h2>
+    <input type="text" id="groupname" placeholder="Enter group name" required>
+    <button onclick="createGroup()">Create Group</button>
+    <p id="group-result"></p>
+
+    <h2>Join Group</h2>
+    <input type="text" id="join_username" placeholder="Enter your username" required>
+    <input type="text" id="join_groupname" placeholder="Enter name of the group you would like to join" required>
+    <button onclick="joinGroup()">Join Group</button>
+    <p id="join-group-result"></p>
+
+    <h2>Send Message</h2>
+    <input type="text" id="message_username" placeholder="Enter your username" required>
+    <input type="text" id="message_group" placeholder="Enter group name" required>
+    <input type="text" id="message_content" placeholder="Enter message" required>
+    <button onclick="sendMessage()">Send Message</button>
+    <p id="message-result"></p>
+
+    <h2>List Messages</h2>
+    <input type="text" id="list_groupname" placeholder="Enter Group ID to list messages" required>
+    <button onclick="listMessages()">List Messages</button>
+    <div id="messages"></div>
+
+    <script>
+        const apiBaseUrl = "http://localhost:8080";
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+
+            // create a new user function
+            window.createUser = function () {
+                var username = document.getElementById("username").value;
+
+                // ensure username is not empty
+                if (username === "") {
+                    alert('Please enter a username');
+                    document.getElementById("user-result").textContent = 'Enter username';
+                    return;
+                }
+
+                fetch(`${apiBaseUrl}/users`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: new URLSearchParams({ username: username })
+                })
+                    .then(response => {
+                        if (response.status == 409){
+                            return {'status': 'User "' + username + '" already exists'};
+                        }
+                        else if (!response.ok) {
+                            // if server side throws unexpected errors
+                            return response.json().then(data => {
+                                throw new Error(data.error || 'Something went wrong');
+                            });
+                        }
+                        // if response is ok
+                        return {'status': 'User ' + username + ' created'};
+                    })
+                    .then(data => {
+                        document.getElementById("user-result").textContent = data.status;
+                    })
+                    .catch(error => {
+                        console.error("Error:", error);
+                        document.getElementById("user-result").textContent = error.message;
+                    });
+            }
+
+
+            // create group function
+            window.createGroup = function () {
+                var groupName = document.getElementById("groupname").value;
+
+                // ensure group name is not empty
+                if (groupName === "") {
+                    alert('Please enter a group name');
+                    document.getElementById("group-result").textContent = 'Enter group name';
+                    return;
+                }
+
+                fetch(`${apiBaseUrl}/groups`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: new URLSearchParams({ name: groupName })
+                })
+                    .then(response => {
+                        if (response.status == 409){
+                            return {'status': 'Group "' + groupName + '" already exists'};;
+                        }
+                        else if (!response.ok) {
+                            // if server throws unexpected error
+                            return response.json().then(data => {
+                                throw new Error(data.error || 'Something went wrong');
+                            });
+                        }
+                        return {'status': 'Group "' + groupName + '" created'};
+                    })
+                    .then(data => {
+                        // update frontend to show group is created
+                        document.getElementById("group-result").textContent = data.status;
+                    })
+                    .catch(error => {
+                        // show error to the user
+                        document.getElementById("group-result").textContent = error.message;
+                    });
+            }
+
+
+             // join group function
+             window.joinGroup = function () {
+                var groupName = document.getElementById("join_groupname").value;
+                var userName = document.getElementById("join_username").value;
+
+                // ensure input fields are not empty
+                if (userName === "") {
+                    alert('Please enter a username');
+                    document.getElementById("join-group-result").textContent = 'Username cannot be empty';
+                    return;
+                }
+
+                if (groupName === "") {
+                    alert('Please enter a group name');
+                    document.getElementById("join-group-result").textContent = 'Group name cannot be empty';
+                    return;
+                }
+
+                fetch(`${apiBaseUrl}/join_group`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: new URLSearchParams({ username: userName, groupname: groupName })
+                })
+                    .then(response => {
+                        if (response.status == 404){
+                            return {'status': 'Username or group name not found.'};;
+                        }
+                        else if (response.status == 409){
+                            return {'status': 'User is already in group'};;
+                        }
+                        else if (!response.ok) {
+                            return response.json().then(data => {
+                                // if server throws unexpected error
+                                throw new Error(data.error || 'Something went wrong');
+                            });
+                        }
+                        return { 'status': '"' + userName + '" has successfully joined the group: "' + groupName + '".' };
+                    })
+                    .then(data => {
+                        // display success status to user
+                        document.getElementById("join-group-result").textContent = data.status;
+                    })
+                    .catch(error => {
+                        // show error to user
+                        document.getElementById("join-group-result").textContent = error.message;
+                    });
+            }
+
+
+
+            // send message function
+            window.sendMessage = function () {
+                var group = document.getElementById("message_group").value;
+                var username = document.getElementById("message_username").value;
+                var content = document.getElementById("message_content").value;
+
+                // ensure there are no empty fields
+                if (username === "") {
+                    alert('Please enter a username');
+                    document.getElementById("message-result").textContent = 'Username cannot be empty';
+                    return;
+                }
+                if (group === "") {
+                    alert('Please enter a group name');
+                    document.getElementById("message-result").textContent = 'Group name cannot be empty';
+                    return;
+                }
+                if (content === "") {
+                    alert('Please enter a message to send');
+                    document.getElementById("message-result").textContent = 'Message cannot be empty';
+                    return;
+                }
+
+                fetch(`${apiBaseUrl}/messages`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: new URLSearchParams({ group_name: group, user_name: username, content: content })
+                })
+                    .then(response => {
+                        if (response.status == 404){
+                            return {'status': 'Username or group name not found.'};;
+                        }
+                        else if (!response.ok) {
+                            return response.json().then(data => {
+                                // if server throws unexpected error
+                                throw new Error(data.error || 'Something went wrong');
+                            });
+                        }
+
+                        return { 'status' : 'Message sent!' }
+                    })
+                    .then(data => {
+                        // confirm to user that message is sent
+                        document.getElementById("message-result").textContent = data.status;
+                    })
+                    .catch(error => {
+                        // show error to user
+                        document.getElementById("message-result").textContent = error.message;
+                    });
+            }
+
+            // list all messages in a group
+            window.listMessages = function () {
+                var group_name = document.getElementById("list_groupname").value;
+
+                fetch(`${apiBaseUrl}/groups/${group_name}/messages`)
+                    .then(response => {
+                        if (response.status == 404){
+                            // if group does not exist
+                            const messageContainer = document.getElementById("messages");
+                            messageContainer.innerHTML = "Group does not exist"; 
+                            throw new Error('Group name not found.');
+                        }
+                        else if (!response.ok) {
+                            // if server throws unexpected error
+                            return response.json().then(data => {
+                                throw new Error(data.error || 'Something went wrong');
+                            });
+                        }
+
+                        return response.json();
+                    })
+                    .then(data => {
+                        data = data['messages'];
+                        const messageContainer = document.getElementById("messages");
+                        messageContainer.innerHTML = ""; // clear previous messages
+                        data.forEach(message => {
+                            const messageDiv = document.createElement("div");
+                            messageDiv.classList.add("message");
+
+                            const date = new Date(message.timestamp.replace(' ', 'T')); // convert to human friendly date format
+
+                            const options = { 
+                                weekday: 'long', 
+                                month: 'long', 
+                                day: 'numeric', 
+                                hour: '2-digit', 
+                                minute: '2-digit',
+                                second: '2-digit'
+                            };
+                            const formattedDate = date.toLocaleDateString('en-US', options);
+
+                            messageDiv.textContent = `[${formattedDate}] ${message.user_name}: ${message.content}`;
+                            messageContainer.appendChild(messageDiv);
+                        });
+                    })
+                    .catch(error => {
+                        messageDiv.textContent = error.message;
+                    });
+            }
+        });
+    </script>
+</body>
+
+</html>
