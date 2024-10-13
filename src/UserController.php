@@ -6,7 +6,7 @@ require_once 'ResponseHelper.php';
 class UserController {
     public function createUser($request, $response, $args) {
         $data = $request->getParsedBody();
-        $username = $data['username'];
+        $username = trim($data['username']);
 
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("INSERT INTO users (username) VALUES (:username)");

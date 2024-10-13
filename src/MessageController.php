@@ -6,8 +6,8 @@ require_once 'ResponseHelper.php';
 class MessageController {
     public function sendMessage($request, $response, $args) {
         $data = $request->getParsedBody();
-        $username = $data['user_name'];
-        $groupName = $data['group_name'];
+        $username = trim($data['user_name']);
+        $groupName = trim($data['group_name']);
         $content = $data['content'];
 
         $db = Database::getInstance()->getConnection();

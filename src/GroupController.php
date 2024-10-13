@@ -7,7 +7,7 @@ class GroupController
     public function createGroup($request, $response, $args)
     {
         $data = $request->getParsedBody();
-        $groupName = $data['name'];
+        $groupName = trim($data['name']);
 
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("INSERT INTO groups (name) VALUES (:name)");
@@ -32,8 +32,8 @@ class GroupController
     public function joinGroup($request, $response, $args)
     {
         $data = $request->getParsedBody();
-        $username = $data['username'];
-        $groupName = $data['groupname'];
+        $username = trim($data['username']);
+        $groupName = trim($data['groupname']);
 
         $db = Database::getInstance()->getConnection();
 
